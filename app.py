@@ -1,12 +1,16 @@
 from flask import Flask, request, jsonify, render_template, session
 import requests
 from flask_session import Session
+from flask_cors import CORS
 
 # Initialize the Flask app
 app = Flask(__name__)
 app.secret_key = "your_secret_key"
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
+
+# Enable CORS
+CORS(app)
 
 # OpenAI API Configuration
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
