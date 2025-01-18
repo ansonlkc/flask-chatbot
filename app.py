@@ -10,7 +10,7 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Enable CORS
-CORS(app)
+CORS(app, origins=["https://anson4c19.pythonanywhere.com"], supports_credentials=True)
 
 # OpenAI API Configuration
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
@@ -23,25 +23,33 @@ MAX_HISTORY = 10
 def index():
     return render_template('chat.html')
 
-@app.route('/chat', methods=['POST'])
+@app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
-    # Retrieve user input
-    user_message = request.json.get('message')
-    if not user_message:
-        return jsonify({"error": "Message is required"}), 400
-
-    # Initialize or retrieve the conversation context
-    if 'conversation' not in session:
-        session['conversation'] = [{"role": "system", "content": "You are a helpful assistant."}]
-
-    # Add the user's message to the conversation history
-    session['conversation'].append({"role": "user", "content": user_message})
-
-    # Ensure the history doesn't exceed the MAX_HISTORY limit
-    if len(session['conversation']) > MAX_HISTORY:
-        session['conversation'] = session['conversation'][-MAX_HISTORY:]
+    if request.method == 'OPTIONS':
+        # Respond OK to preflight requests
+        return '', 200
 
     try:
+        # Debug incoming request
+        print(f"Headers: {request.headers}")
+        print(f"Body: {request.json}")
+
+        # Validate user message
+        user_message = request.json.get('message')
+        if not user_message:
+            return jsonify({"error": "Message is required"}), 400
+
+        # Initialize or retrieve the conversation context
+        if 'conversation' not in session:
+            session['conversation'] = [{"role": "system", "content": "You are a helpful assistant."}]
+
+        # Add the user's message to the conversation history
+        session['conversation'].append({"role": "user", "content": user_message})
+
+        # Ensure the history doesn't exceed the MAX_HISTORY limit
+        if len(session['conversation']) > MAX_HISTORY:
+            session['conversation'] = session['conversation'][-MAX_HISTORY:]
+
         # Prepare the API request payload
         headers = {
             "Authorization": f"Bearer {API_KEY}",
