@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template, session
 import requests
 from flask_session import Session
 from flask_cors import CORS
+import os
 
 # Initialize the Flask app
 app = Flask(__name__)
@@ -10,29 +11,31 @@ app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
 
 # Enable CORS
-CORS(app, origins=["https://anson4c19.pythonanywhere.com"], supports_credentials=True)
+CORS(app, origins=["https://your-replit-url.repl.co"], supports_credentials=True)
 
 # OpenAI API Configuration
 API_URL = "https://openrouter.ai/api/v1/chat/completions"
-API_KEY = "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"
+API_KEY = os.getenv("API_KEY")  # Ensure API key is stored as an environment variable
 
 # Maximum number of messages to keep in the conversation history
 MAX_HISTORY = 10
 
 @app.route('/')
 def index():
-    return render_template('chat.html')
+    """Render the main chatbot interface."""
+    return render_template('chat.html')  # Ensure chat.html exists in the templates/ folder
 
 @app.route('/chat', methods=['POST', 'OPTIONS'])
 def chat():
+    """Handle chat messages sent by the user."""
     if request.method == 'OPTIONS':
         # Respond OK to preflight requests
         return '', 200
 
     try:
         # Debug incoming request
-        print(f"Headers: {request.headers}")
-        print(f"Body: {request.json}")
+        app.logger.debug(f"Headers: {request.headers}")
+        app.logger.debug(f"Body: {request.json}")
 
         # Validate user message
         user_message = request.json.get('message')
@@ -79,6 +82,7 @@ def chat():
         return jsonify({"reply": assistant_reply})
 
     except Exception as e:
+        app.logger.error(f"Error occurred: {e}")
         return jsonify({"error": str(e)}), 500
 
 @app.route('/reset', methods=['POST'])
