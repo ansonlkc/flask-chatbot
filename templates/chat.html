@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chatbot</title>
+    <script>
+        async function sendMessage() {
+            const message = document.getElementById('user-input').value;
+            const response = await fetch('/chat', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ message }),
+            });
+            const data = await response.json();
+            const output = document.getElementById('chat-output');
+            output.innerHTML += `<p><strong>You:</strong> ${message}</p>`;
+            output.innerHTML += `<p><strong>Bot:</strong> ${data.reply || data.error}</p>`;
+            document.getElementById('user-input').value = ''; // Clear input
+        }
+
+        async function clearChat() {
+            const response = await fetch('/reset', { method: 'POST' });
+            const data = await response.json();
+            document.getElementById('chat-output').innerHTML = '<p>Chat history cleared.</p>';
+        }
+    </script>
+</head>
+<body>
+    <h1>Chatbot</h1>
+    <div id="chat-output"></div>
+    <textarea id="user-input" rows="4" cols="50" placeholder="Type your message here..."></textarea><br>
+    <button onclick="sendMessage()">Send</button>
+    <button onclick="clearChat()">Clear Chat</button>
+</body>
+</html>
